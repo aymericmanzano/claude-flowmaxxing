@@ -77,6 +77,10 @@ The app writes a short diagnostic log to `~/Library/Logs/ClaudeFlowmaxxing.log`,
 
 Claude Flowmaxxing is a personal side project. It is not affiliated with, endorsed by or supported by Anthropic. Claude is a trademark of Anthropic. The usage endpoint used here is undocumented and may change without notice.
 
+## Support
+
+If Claude Flowmaxxing keeps you in the flow, you can tip me in sats ⚡ `aymeric@walletofsatoshi.com` (Lightning address).
+
 ## Credits
 
 Made by [Aymeric Manzano](https://www.aymericmanzano.fr/), built with [Claude Code](https://www.anthropic.com/claude-code).
