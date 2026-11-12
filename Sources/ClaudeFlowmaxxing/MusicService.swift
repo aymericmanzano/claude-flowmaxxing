@@ -23,7 +23,7 @@ final class MusicService: ObservableObject {
 
     static let players = [
         Player(id: "com.spotify.client", name: "Spotify"),
-        Player(id: "com.apple.Music", name: "Musique"),
+        Player(id: "com.apple.Music", name: L.s("player.music")),
         Player(id: "org.videolan.vlc", name: "VLC"),
     ]
 

@@ -9,10 +9,11 @@
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleShortVersionString</key><string>1.0</string>
     <key>CFBundleVersion</key><string>1</string>
-    <key>CFBundleDevelopmentRegion</key><string>fr</string>
+    <key>CFBundleDevelopmentRegion</key><string>en</string>
+    <key>CFBundleLocalizations</key><array><string>en</string><string>fr</string><string>es</string><string>de</string></array>
     <key>LSMinimumSystemVersion</key><string>14.0</string>
     <key>LSUIElement</key><true/>
     <key>NSHighResolutionCapable</key><true/>
-    <key>NSAppleEventsUsageDescription</key><string>Claude Flowmaxxing affiche le morceau en cours et pilote la lecture dans Spotify, Musique ou VLC.</string>
+    <key>NSAppleEventsUsageDescription</key><string>Claude Flowmaxxing shows the current track and controls playback in Spotify, Music or VLC.</string>
 </dict>
 </plist>

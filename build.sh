@@ -10,6 +10,7 @@ rm -rf build/ClaudeFlowmaxxing.app build/dmg build/ClaudeFlowmaxxing.dmg
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$(swift build -c release --arch arm64 --show-bin-path)/ClaudeFlowmaxxing" "$APP/Contents/MacOS/ClaudeFlowmaxxing"
 cp Info.plist "$APP/Contents/Info.plist"
+cp -R Resources/*.lproj "$APP/Contents/Resources/"
 [[ -f Resources/AppIcon.icns ]] && cp Resources/AppIcon.icns "$APP/Contents/Resources/" && \
   /usr/libexec/PlistBuddy -c "Add :CFBundleIconFile string AppIcon" "$APP/Contents/Info.plist"
 

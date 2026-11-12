@@ -18,7 +18,7 @@ Screenshots use the built-in demo mode (`--demo`), with fictional data.
 - Click the notch to open the panel: 5-hour, 7-day and per-model limits with their reset times, extra usage credits, today's estimated cost, and your most used model over 7 days.
 - A second page controls your music: artwork, track, progress, play/pause, previous and next, for Spotify, Apple Music and VLC (title only for VLC). With any other player, such as Deezer, Tidal or a browser tab, the buttons send the keyboard media keys. Swipe with two fingers to move between pages.
 
-The interface is in French for now.
+The interface follows your system language: English, French, Spanish or German, with English as the fallback.
 
 ## Requirements
 

@@ -128,7 +128,7 @@ struct FinishedBanner: View {
                 .foregroundStyle(.white)
                 .lineLimit(1)
                 .truncationMode(.tail)
-            Text("a terminé")
+            Text(L.s("toast.finished"))
                 .font(.system(size: 12.5))
                 .foregroundStyle(Palette.secondary)
                 .fixedSize()
@@ -176,7 +176,7 @@ struct CompactView: View {
                     QuotaBadge(quota: usage.quota(slot: state.notchSlot), short: usage.shortLabel(slot: state.notchSlot))
                         .contentShape(Rectangle())
                         .onTapGesture { withAnimation(.easeInOut(duration: 0.15)) { state.cycleSlot(usage) } }
-                        .help("\(usage.shortLabel(slot: state.notchSlot)) : cliquer pour passer à 5 heures, 7 jours ou Fable")
+                        .help(L.s("quota.cycle", usage.shortLabel(slot: state.notchSlot)))
                 } else if music.isPlaying {
                     Equalizer().frame(width: 16, height: 13)
                 }

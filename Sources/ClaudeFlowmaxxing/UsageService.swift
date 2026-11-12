@@ -31,8 +31,8 @@ final class UsageService: ObservableObject {
     init() {
         if Demo.on {
             let now = Date()
-            fiveHour = Quota(id: "five_hour", label: "5 heures", percent: 42, resetsAt: now.addingTimeInterval(2 * 3600 + 13 * 60))
-            sevenDay = Quota(id: "seven_day", label: "7 jours", percent: 61, resetsAt: now.addingTimeInterval(3 * 86400 + 5 * 3600))
+            fiveHour = Quota(id: "five_hour", label: L.s("quota.5h"), percent: 42, resetsAt: now.addingTimeInterval(2 * 3600 + 13 * 60))
+            sevenDay = Quota(id: "seven_day", label: L.s("quota.7d"), percent: 61, resetsAt: now.addingTimeInterval(3 * 86400 + 5 * 3600))
             others = [Quota(id: "scoped-0", label: "Fable", percent: 18, resetsAt: now.addingTimeInterval(3 * 86400 + 5 * 3600))]
             credits = Credits(used: 12.40, limit: 50, percent: 24.8, symbole: "$")
             updated = now
@@ -54,9 +54,9 @@ final class UsageService: ObservableObject {
 
     func shortLabel(slot: Int) -> String {
         switch slot {
-        case 1: return "7 j"
-        case 2: return others.first?.label ?? "5 h"
-        default: return "5 h"
+        case 1: return L.s("quota.7d.short")
+        case 2: return others.first?.label ?? L.s("quota.5h.short")
+        default: return L.s("quota.5h.short")
         }
     }
 
@@ -78,7 +78,7 @@ final class UsageService: ObservableObject {
         DispatchQueue.global(qos: .utility).async { [weak self] in
             guard let self else { return }
             guard let creds = TokenStore.read() else {
-                self.finish(error: "Jeton Claude Code introuvable. Connecte-toi avec claude dans le terminal.")
+                self.finish(error: L.s("err.noToken"))
                 return
             }
             var token = creds.accessToken
@@ -87,13 +87,13 @@ final class UsageService: ObservableObject {
                 case .success(let t):
                     token = t
                 case .failure(.writeFailed):
-                    self.finish(error: "Jeton renouvelé mais non enregistré. Lance claude puis /login dans le terminal.")
+                    self.finish(error: L.s("err.notSaved"))
                     return
                 case .failure(.rejected(let code)) where code == 400 || code == 401:
-                    self.finish(error: "Renouvellement refusé. Lance claude puis /login dans le terminal.")
+                    self.finish(error: L.s("err.refused"))
                     return
                 case .failure:
-                    self.finish(error: "Renouvellement du jeton impossible pour l'instant, nouvel essai dans 5 min.")
+                    self.finish(error: L.s("err.renewLater"))
                     return
                 }
             }
@@ -105,23 +105,23 @@ final class UsageService: ObservableObject {
             URLSession.shared.dataTask(with: req) { data, resp, err in
                 let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
                 if err != nil {
-                    self.finish(error: "Pas de connexion.")
+                    self.finish(error: L.s("err.offline"))
                 } else if code == 401 || code == 403 {
                     let body = data.flatMap { String(data: $0, encoding: .utf8) }?.prefix(300) ?? ""
                     Log.write("quotas HTTP \(code) : \(body)")
-                    self.finish(error: "Connexion refusée par Anthropic. Lance claude puis /login dans le terminal.")
+                    self.finish(error: L.s("err.denied"))
                 } else if code == 429 {
                     let wait = (resp as? HTTPURLResponse)?.value(forHTTPHeaderField: "retry-after").flatMap(Double.init).map { max($0, 60) } ?? 60
                     Log.write("quotas : HTTP 429, nouvel essai dans \(Int(wait)) s")
                     self.retryAfter = Date().addingTimeInterval(wait)
                     // On garde les dernières valeurs ; message seulement si on n'en a aucune.
-                    self.finish(error: self.updated == nil ? "Anthropic limite les appels, nouvel essai dans \(Int(max(wait, 60) / 60)) min." : nil)
+                    self.finish(error: self.updated == nil ? L.s("err.rate", Int(max(wait, 60) / 60)) : nil)
                 } else if code != 200 {
-                    self.finish(error: "Réponse inattendue (\(code)).")
+                    self.finish(error: L.s("err.unexpected", code))
                 } else if let data, let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
                     self.apply(json)
                 } else {
-                    self.finish(error: "Réponse illisible.")
+                    self.finish(error: L.s("err.unreadable"))
                 }
             }.resume()
         }
@@ -148,8 +148,8 @@ final class UsageService: ObservableObject {
             guard let d = json[key] as? [String: Any], let u = Self.number(d["utilization"]) else { return nil }
             return Quota(id: key, label: label, percent: u, resetsAt: (d["resets_at"] as? String).flatMap(Format.date))
         }
-        let five = quota("five_hour", "5 heures")
-        let seven = quota("seven_day", "7 jours")
+        let five = quota("five_hour", L.s("quota.5h"))
+        let seven = quota("seven_day", L.s("quota.7d"))
         // Quotas par modèle (Fable…) : tableau « limits », entrées « weekly_scoped ».
         var extras: [Quota] = []
         for (i, l) in ((json["limits"] as? [[String: Any]]) ?? []).enumerated() where (l["kind"] as? String) == "weekly_scoped" {

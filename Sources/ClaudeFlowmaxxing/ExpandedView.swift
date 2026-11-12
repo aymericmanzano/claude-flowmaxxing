@@ -38,7 +38,7 @@ struct ExpandedView: View {
     private var header: some View {
         HStack(spacing: 14) {
             tab("Claude", 0)
-            tab("Musique", 1)
+            tab(L.s("tab.music"), 1)
             Spacer(minLength: state.notchWidth)
             Button {
                 usage.refresh()
@@ -46,13 +46,13 @@ struct ExpandedView: View {
             } label: {
                 Image(systemName: "arrow.clockwise")
             }
-            .help("Actualiser")
+            .help(L.s("help.refresh"))
             Button {
                 NSApp.terminate(nil)
             } label: {
                 Image(systemName: "power")
             }
-            .help("Quitter Claude Flowmaxxing")
+            .help(L.s("help.quit"))
         }
         .buttonStyle(.plain)
         .font(.system(size: 12, weight: .medium))
@@ -91,9 +91,9 @@ struct ClaudePage: View {
 
     private var sessionsLine: String {
         let n = claude.openCount
-        let ouvertes = n == 0 ? "Aucune session ouverte" : (n == 1 ? "1 session ouverte" : "\(n) sessions ouvertes")
+        let ouvertes = n == 0 ? L.s("sessions.none") : (n == 1 ? L.s("sessions.one") : L.s("sessions.many", n))
         if claude.busyNames.isEmpty { return ouvertes }
-        return ouvertes + ", en cours : " + claude.busyNames.joined(separator: ", ")
+        return L.s("sessions.busy", ouvertes, claude.busyNames.joined(separator: ", "))
     }
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 3)
@@ -101,16 +101,16 @@ struct ClaudePage: View {
     var body: some View {
         VStack(spacing: 6) {
             LazyVGrid(columns: columns, spacing: 8) {
-                quotaTile(usage.fiveHour, title: "5 heures", slot: 0)
-                quotaTile(usage.sevenDay, title: "7 jours", slot: 1)
+                quotaTile(usage.fiveHour, title: L.s("quota.5h"), slot: 0)
+                quotaTile(usage.sevenDay, title: L.s("quota.7d"), slot: 1)
                 thirdTile
-                Tile(title: "Coût du jour, en local",
+                Tile(title: L.s("cost.today"),
                      value: Format.montant(cost.today, symbole: "$"),
-                     subtitle: cost.projection.map { "environ \(Format.montant($0, symbole: "$")) d'ici ce soir" } ?? (cost.ready ? "journée terminée" : "calcul en cours"))
+                     subtitle: cost.projection.map { L.s("cost.projection", Format.montant($0, symbole: "$")) } ?? (cost.ready ? L.s("cost.dayOver") : L.s("cost.computing")))
                 creditsTile
-                Tile(title: "Modèle principal",
+                Tile(title: L.s("model.title"),
                      value: cost.topModel ?? "…",
-                     subtitle: cost.topModel == nil ? "aucune donnée" : "\(Format.pourcent(cost.topShare)) des dépenses sur 7 jours")
+                     subtitle: cost.topModel == nil ? L.s("model.none") : L.s("model.share", Format.pourcent(cost.topShare)))
             }
             Group {
                 if let e = usage.error {
@@ -129,42 +129,42 @@ struct ClaudePage: View {
         if let q = usage.others.first {
             quotaTile(q, title: q.label, slot: 2)
         } else {
-            Tile(title: "Coût sur 7 jours, en local",
+            Tile(title: L.s("cost.week"),
                  value: Format.montant(cost.week, symbole: "$"),
-                 subtitle: "au tarif public de l'API")
+                 subtitle: L.s("cost.apiRates"))
         }
     }
 
     @ViewBuilder private var creditsTile: some View {
         if let c = usage.credits {
-            Tile(title: "Crédits supplémentaires",
+            Tile(title: L.s("credits.title"),
                  value: Format.montant(c.used, symbole: c.symbole),
                  subtitle: creditsSubtitle(c),
                  accent: c.capReached ? Palette.level(100) : nil)
         } else {
-            Tile(title: "Crédits supplémentaires",
-                 value: usage.updated == nil ? "…" : "Désactivés",
+            Tile(title: L.s("credits.title"),
+                 value: usage.updated == nil ? "…" : L.s("credits.off"),
                  subtitle: " ")
         }
     }
 
     private func creditsSubtitle(_ c: Credits) -> String {
         let plafond = c.limit.map { Format.montant($0, symbole: c.symbole) }
-        if c.capReached { return plafond.map { "plafond de \($0) atteint" } ?? "plafond atteint" }
-        if let p = c.percent, let plafond { return "\(Format.pourcent(p)) du plafond de \(plafond)" }
-        return plafond.map { "sur \($0)" } ?? " "
+        if c.capReached { return plafond.map { L.s("credits.capOf", $0) } ?? L.s("credits.cap") }
+        if let p = c.percent, let plafond { return L.s("credits.pctOf", Format.pourcent(p), plafond) }
+        return plafond.map { L.s("credits.of", $0) } ?? " "
     }
 
     private func quotaTile(_ q: Quota?, title: String, slot: Int) -> some View {
         let selected = state.notchSlot == slot
         return Tile(title: title,
                     value: q.map { Format.pourcent($0.percent) } ?? "…",
-                    subtitle: q?.resetsAt.map { "remise à zéro dans \(Format.dureeAvant($0))" } ?? " ",
+                    subtitle: q?.resetsAt.map { L.s("quota.reset", Format.dureeAvant($0)) } ?? " ",
                     accent: q.map { Palette.level($0.percent) },
-                    badge: selected ? "dans l'encoche" : nil,
+                    badge: selected ? L.s("quota.badge") : nil,
                     selected: selected)
             .onTapGesture { state.notchSlot = slot }
-            .help(selected ? "Affiché dans l'encoche" : "Cliquer pour afficher dans l'encoche")
+            .help(selected ? L.s("quota.shown") : L.s("quota.clickToShow"))
     }
 }
 
@@ -234,7 +234,7 @@ struct MusicPage: View {
         if !music.running {
             // Autre app (Deezer, Tidal, navigateur…) : pas d'infos, mais les touches multimédia.
             VStack(spacing: 14) {
-                Text("Spotify, Musique et VLC sont fermés. Les boutons pilotent l'app de musique active.")
+                Text(L.s("music.closed"))
                     .font(.system(size: 13))
                     .foregroundStyle(Palette.secondary)
                     .multilineTextAlignment(.center)
@@ -242,9 +242,9 @@ struct MusicPage: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if music.permissionDenied {
-            message("Autorise Claude Flowmaxxing à piloter \(music.appName) : Réglages Système, Confidentialité et sécurité, Automatisation.")
+            message(L.s("music.permission", music.appName))
         } else if music.title.isEmpty {
-            message("Aucun morceau en cours.")
+            message(L.s("music.nothing"))
         } else {
             // Pochette à pleine hauteur ; à côté, de haut en bas : l'app, le morceau,
             // la progression et les boutons, alignés sur la hauteur de la pochette.

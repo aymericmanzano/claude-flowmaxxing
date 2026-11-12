@@ -24,9 +24,19 @@ enum Format {
         return f
     }()
 
-    /// Montant sans espace avant le symbole : « 229,84$ », « 3,20€ ».
+    /// En français, montant sans espace avant le symbole : « 229,84$ », « 3,20€ ».
+    /// Dans les autres langues, l'usage local : « $229.84 », « 229,84 $ ».
     static func montant(_ v: Double, symbole: String) -> String {
-        (decimal.string(from: NSNumber(value: v)) ?? String(format: "%.2f", v)) + symbole
+        if L.isFrench {
+            return (decimal.string(from: NSNumber(value: v)) ?? String(format: "%.2f", v)) + symbole
+        }
+        let f = NumberFormatter()
+        f.locale = Locale(identifier: L.lang)
+        f.numberStyle = .currency
+        f.currencySymbol = symbole
+        f.minimumFractionDigits = 2
+        f.maximumFractionDigits = 2
+        return f.string(from: NSNumber(value: v)) ?? String(format: "%.2f", v) + symbole
     }
 
     static func pourcent(_ v: Double) -> String {
@@ -39,9 +49,9 @@ enum Format {
         let jours = minutes / 1440
         let heures = (minutes % 1440) / 60
         let mins = minutes % 60
-        if jours > 0 { return "\(jours) j \(heures) h" }
-        if heures > 0 { return "\(heures) h \(mins) min" }
-        return "\(mins) min"
+        if jours > 0 { return L.s("dur.dh", jours, heures) }
+        if heures > 0 { return L.s("dur.hm", heures, mins) }
+        return L.s("dur.m", mins)
     }
 
     static func minutesSecondes(_ secondes: Double) -> String {
