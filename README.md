@@ -70,7 +70,7 @@ Claude Flowmaxxing is a personal side project. It is not affiliated with, endors
 
 ## Credits
 
-Made by [Aymeric Manzano](https://www.aymericmanzano.fr/).
+Made by [Aymeric Manzano](https://www.aymericmanzano.fr/), built with [Claude Code](https://www.anthropic.com/claude-code).
 
 ## License
 
