@@ -5,7 +5,7 @@ struct ExpandedView: View {
     @ObservedObject var claude: ClaudeMonitor
     @ObservedObject var usage: UsageService
     @ObservedObject var cost: CostService
-    @ObservedObject var spotify: SpotifyService
+    @ObservedObject var music: MusicService
 
     var body: some View {
         VStack(spacing: 10) {
@@ -27,7 +27,7 @@ struct ExpandedView: View {
         return HStack(alignment: .top, spacing: gap) {
             ClaudePage(state: state, claude: claude, usage: usage, cost: cost)
                 .frame(width: w, alignment: .top)
-            MusicPage(spotify: spotify)
+            MusicPage(music: music)
                 .frame(width: w, alignment: .top)
         }
         .offset(x: base + state.pageDrag)
@@ -228,35 +228,52 @@ struct Tile: View {
 // MARK: - Page Musique
 
 struct MusicPage: View {
-    @ObservedObject var spotify: SpotifyService
+    @ObservedObject var music: MusicService
 
     var body: some View {
-        if !spotify.running {
-            message("Spotify n'est pas ouvert.")
-        } else if spotify.permissionDenied {
-            message("Autorise Claude Flowmaxxing à piloter Spotify : Réglages Système, Confidentialité et sécurité, Automatisation.")
-        } else if spotify.title.isEmpty {
+        if !music.running {
+            // Autre app (Deezer, Tidal, navigateur…) : pas d'infos, mais les touches multimédia.
+            VStack(spacing: 14) {
+                Text("Spotify, Musique et VLC sont fermés. Les boutons pilotent l'app de musique active.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Palette.secondary)
+                    .multilineTextAlignment(.center)
+                controls
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if music.permissionDenied {
+            message("Autorise Claude Flowmaxxing à piloter \(music.appName) : Réglages Système, Confidentialité et sécurité, Automatisation.")
+        } else if music.title.isEmpty {
             message("Aucun morceau en cours.")
         } else {
-            HStack(spacing: 16) {
-                Artwork(image: spotify.artwork, size: 120, radius: 12)
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(spotify.title)
-                        .font(.system(size: 16, weight: .semibold))
+            // Pochette à pleine hauteur ; à côté, de haut en bas : l'app, le morceau,
+            // la progression et les boutons, alignés sur la hauteur de la pochette.
+            HStack(alignment: .center, spacing: 18) {
+                Artwork(image: music.artwork, size: 150, radius: 14)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(music.appName.uppercased())
+                        .font(.system(size: 10, weight: .semibold))
+                        .tracking(0.6)
+                        .foregroundStyle(Palette.secondary)
+                        .padding(.bottom, 6)
+                    Text(music.title)
+                        .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(.white)
-                        .lineLimit(1)
-                    Text(spotify.artist)
+                        .lineLimit(2)
+                    Text(music.artist)
                         .font(.system(size: 13))
                         .foregroundStyle(Palette.secondary)
                         .lineLimit(1)
-                    Spacer(minLength: 4)
+                        .padding(.top, 2)
+                    Spacer(minLength: 10)
                     progress
                     controls
+                        .padding(.top, 10)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(height: 124)
-            .padding(.top, 4)
+            .frame(height: 150)
+            .frame(maxHeight: .infinity)
         }
     }
 
@@ -266,14 +283,14 @@ struct MusicPage: View {
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color.white.opacity(0.15))
                     Capsule().fill(Color.white)
-                        .frame(width: spotify.duration > 0 ? geo.size.width * min(1, spotify.position / spotify.duration) : 0)
+                        .frame(width: music.duration > 0 ? geo.size.width * min(1, music.position / music.duration) : 0)
                 }
             }
             .frame(height: 4)
             HStack {
-                Text(Format.minutesSecondes(spotify.position))
+                Text(Format.minutesSecondes(music.position))
                 Spacer()
-                Text(Format.minutesSecondes(spotify.duration))
+                Text(Format.minutesSecondes(music.duration))
             }
             .font(.system(size: 10).monospacedDigit())
             .foregroundStyle(Palette.secondary)
@@ -281,11 +298,11 @@ struct MusicPage: View {
     }
 
     private var controls: some View {
-        HStack(spacing: 28) {
+        HStack(spacing: 36) {
             Spacer()
-            control("backward.fill", 15) { spotify.previous() }
-            control(spotify.isPlaying ? "pause.fill" : "play.fill", 20) { spotify.playPause() }
-            control("forward.fill", 15) { spotify.next() }
+            control("backward.fill", 17) { music.previous() }
+            control(music.isPlaying ? "pause.fill" : "play.fill", 24) { music.playPause() }
+            control("forward.fill", 17) { music.next() }
             Spacer()
         }
     }

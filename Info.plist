@@ -13,6 +13,6 @@
     <key>LSMinimumSystemVersion</key><string>14.0</string>
     <key>LSUIElement</key><true/>
     <key>NSHighResolutionCapable</key><true/>
-    <key>NSAppleEventsUsageDescription</key><string>Claude Flowmaxxing affiche le morceau en cours et pilote la lecture dans Spotify.</string>
+    <key>NSAppleEventsUsageDescription</key><string>Claude Flowmaxxing affiche le morceau en cours et pilote la lecture dans Spotify, Musique ou VLC.</string>
 </dict>
 </plist>

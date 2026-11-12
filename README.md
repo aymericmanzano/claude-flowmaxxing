@@ -8,7 +8,7 @@ A small native macOS app that lives in your MacBook's notch and keeps you in the
 - The right side of the notch shows your 5-hour usage as a ring. Click it to switch to the 7-day or the per-model weekly limit.
 - When a session finishes, a banner slides out of the notch for 6 seconds. Click it to jump straight to that session in the Claude desktop app.
 - Click the notch to open the panel: 5-hour, 7-day and per-model limits with their reset times, extra usage credits, today's estimated cost, and your most used model over 7 days.
-- A second page controls Spotify: artwork, track, progress, play/pause, previous and next. Swipe with two fingers to move between pages.
+- A second page controls your music: artwork, track, progress, play/pause, previous and next, for Spotify, Apple Music and VLC (title only for VLC). With any other player, such as Deezer, Tidal or a browser tab, the buttons send the keyboard media keys. Swipe with two fingers to move between pages.
 
 The interface is in French for now.
 
@@ -17,7 +17,7 @@ The interface is in French for now.
 - A MacBook with a notch, on Apple Silicon
 - macOS 14 Sonoma or later
 - Claude Code, signed in with a Claude subscription (the usage limits come from your account)
-- Spotify desktop app, optional
+- Spotify, Apple Music or VLC, optional
 
 ## Build and install
 
@@ -29,7 +29,7 @@ cd claude-flowmaxxing
 
 `build.sh` compiles a release build with Swift Package Manager, assembles `build/ClaudeFlowmaxxing.app`, signs it ad hoc and creates `build/ClaudeFlowmaxxing.dmg`. Open the DMG and drag the app to Applications.
 
-The app has no Apple Developer ID signature. On first launch, right-click the app and choose Open, then confirm. macOS asks once for permission to control Spotify.
+The app has no Apple Developer ID signature. On first launch, right-click the app and choose Open, then confirm. macOS asks once per music app for permission to control it.
 
 ## How it works
 
@@ -41,7 +41,7 @@ Everything runs locally. The app talks to two Anthropic endpoints and to nothing
 | Jump to a finished session | `claude://code/continue?session=<id>` deep link, handled by the Claude desktop app |
 | Usage limits and credits | `GET https://api.anthropic.com/api/oauth/usage`, every 60 seconds, with the OAuth token Claude Code stores in the login keychain |
 | Estimated cost | Local parsing of the transcripts in `~/.claude/projects`, priced at public API rates |
-| Spotify | AppleScript, only when Spotify is already running |
+| Music | AppleScript for Spotify, Apple Music and VLC, only when the app is already running; keyboard media keys for other players, which needs the Accessibility permission |
 
 ### About the keychain token
 

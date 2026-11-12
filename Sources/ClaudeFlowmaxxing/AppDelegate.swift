@@ -72,7 +72,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let claude = ClaudeMonitor()
     let usage = UsageService()
     let cost = CostService()
-    let spotify = SpotifyService()
+    let music = MusicService()
 
     private var panel: NotchPanel!
     private var bag = Set<AnyCancellable>()
@@ -97,14 +97,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel.isMovable = false
         panel.isReleasedWhenClosed = false
 
-        let root = RootView(state: state, claude: claude, usage: usage, cost: cost, spotify: spotify)
+        let root = RootView(state: state, claude: claude, usage: usage, cost: cost, music: music)
         let host = FirstClickHostingView(rootView: root)
         host.sizingOptions = []
         panel.contentView = host
 
         measureNotch()
 
-        Publishers.CombineLatest4(claude.$visible, spotify.$isPlaying, state.$expanded, claude.$generating)
+        Publishers.CombineLatest4(claude.$visible, music.$isPlaying, state.$expanded, claude.$generating)
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in DispatchQueue.main.async { self?.update() } }
             .store(in: &bag)
@@ -127,7 +127,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     self.usage.refreshIfStale()
                     self.cost.refresh()
                 }
-                self.state.page = (!self.claude.visible && self.spotify.running) ? 1 : self.state.page
+                self.state.page = (!self.claude.visible && self.music.running) ? 1 : self.state.page
             }
             .store(in: &bag)
 
@@ -228,7 +228,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private var earWidth: CGFloat {
-        claude.visible && spotify.isPlaying ? 118 : 90
+        claude.visible && music.isPlaying ? 118 : 90
     }
 
     /// Largeur à droite de l'encoche quand elle est fermée.
@@ -264,7 +264,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func currentMode() -> NotchMode {
         if state.expanded { return .expanded }
         if state.toast != nil { return .toast }
-        if claude.visible || spotify.isPlaying { return .compact }
+        if claude.visible || music.isPlaying { return .compact }
         return .hidden
     }
 

@@ -45,7 +45,7 @@ struct RootView: View {
     @ObservedObject var claude: ClaudeMonitor
     @ObservedObject var usage: UsageService
     @ObservedObject var cost: CostService
-    @ObservedObject var spotify: SpotifyService
+    @ObservedObject var music: MusicService
 
     var body: some View {
         let radius: CGFloat = state.mode == .expanded ? 22 : (state.mode == .toast ? 16 : 10)
@@ -81,7 +81,7 @@ struct RootView: View {
         let open = state.mode == .expanded
         let width = max(0, state.shapeSize.width - 2 * AppDelegate.flare)
         // Le panneau est en surimpression : il ne pèse pas sur la largeur de l'encoche fermée.
-        return CompactView(state: state, claude: claude, usage: usage, spotify: spotify)
+        return CompactView(state: state, claude: claude, usage: usage, music: music)
             .frame(width: width, alignment: .top)
             .opacity(compact ? 1 : 0)
             .blur(radius: compact ? 0 : 4)
@@ -99,7 +99,7 @@ struct RootView: View {
                     .allowsHitTesting(false)
             }
             .overlay(alignment: .top) {
-                ExpandedView(state: state, claude: claude, usage: usage, cost: cost, spotify: spotify)
+                ExpandedView(state: state, claude: claude, usage: usage, cost: cost, music: music)
                     .frame(width: AppDelegate.expandedSize.width - 2 * AppDelegate.flare,
                            height: AppDelegate.expandedSize.height, alignment: .top)
                     .opacity(open ? 1 : 0)
@@ -145,7 +145,7 @@ struct CompactView: View {
     @ObservedObject var state: AppState
     @ObservedObject var claude: ClaudeMonitor
     @ObservedObject var usage: UsageService
-    @ObservedObject var spotify: SpotifyService
+    @ObservedObject var music: MusicService
 
     /// À gauche, une oreille étroite pour le personnage seul, qui laisse visibles les menus
     /// de l'app au premier plan ; à droite, le quota et la pochette.
@@ -161,8 +161,8 @@ struct CompactView: View {
                     ClaudeCreature(animated: claude.generating)
                         .frame(width: 20, height: 15)
                 }
-                if spotify.isPlaying {
-                    Artwork(image: spotify.artwork, size: 18, radius: 4)
+                if music.isPlaying {
+                    Artwork(image: music.artwork, size: 18, radius: 4)
                         .onTapGesture { state.openMusic() }
                 }
                 Spacer(minLength: 0)
@@ -177,7 +177,7 @@ struct CompactView: View {
                         .contentShape(Rectangle())
                         .onTapGesture { withAnimation(.easeInOut(duration: 0.15)) { state.cycleSlot(usage) } }
                         .help("\(usage.shortLabel(slot: state.notchSlot)) : cliquer pour passer à 5 heures, 7 jours ou Fable")
-                } else if spotify.isPlaying {
+                } else if music.isPlaying {
                     Equalizer().frame(width: 16, height: 13)
                 }
             }
