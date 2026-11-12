@@ -67,6 +67,7 @@ struct RootView: View {
                 state.expanded = true
             }
         }
+        .offset(x: state.shapeOffset + state.contentShift)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .environment(\.colorScheme, .dark)
     }
@@ -146,41 +147,43 @@ struct CompactView: View {
     @ObservedObject var usage: UsageService
     @ObservedObject var spotify: SpotifyService
 
+    /// À gauche, une oreille étroite pour le personnage seul, qui laisse visibles les menus
+    /// de l'app au premier plan ; à droite, le quota et la pochette.
     var body: some View {
-        HStack(spacing: 0) {
-            HStack {
+        // Marge qui aligne l'emplacement de l'encoche sur l'encoche physique, quelle que soit
+        // la largeur de la forme (fermée et asymétrique, ou bandeau de fin, centré).
+        let lead = max(0, (state.shapeSize.width - 2 * AppDelegate.flare) / 2 - state.shapeOffset
+                          - state.notchWidth / 2 - state.leftEar)
+        return HStack(spacing: 0) {
+            Color.clear.frame(width: lead)
+            HStack(spacing: 6) {
                 if claude.visible {
                     ClaudeCreature(animated: claude.generating)
                         .frame(width: 20, height: 15)
-                } else if spotify.isPlaying {
-                    Artwork(image: spotify.artwork, size: 20, radius: 5)
+                }
+                if spotify.isPlaying {
+                    Artwork(image: spotify.artwork, size: 18, radius: 4)
                         .onTapGesture { state.openMusic() }
                 }
                 Spacer(minLength: 0)
             }
-            .padding(.leading, 12)
-            .frame(maxWidth: .infinity)
-
+            .padding(.leading, 10)
+            .frame(width: state.leftEar)
             Color.clear.frame(width: state.notchWidth)
-
-            HStack(spacing: 7) {
+            HStack(spacing: 0) {
                 Spacer(minLength: 0)
                 if claude.visible {
-                    QuotaBadge(quota: usage.quota(slot: state.notchSlot),
-                               short: usage.shortLabel(slot: state.notchSlot))
+                    QuotaBadge(quota: usage.quota(slot: state.notchSlot), short: usage.shortLabel(slot: state.notchSlot))
                         .contentShape(Rectangle())
                         .onTapGesture { withAnimation(.easeInOut(duration: 0.15)) { state.cycleSlot(usage) } }
-                        .help("Cliquer pour passer à 5 heures, 7 jours ou Fable")
-                    if spotify.isPlaying {
-                        Artwork(image: spotify.artwork, size: 18, radius: 4)
-                            .onTapGesture { state.openMusic() }
-                    }
+                        .help("\(usage.shortLabel(slot: state.notchSlot)) : cliquer pour passer à 5 heures, 7 jours ou Fable")
                 } else if spotify.isPlaying {
                     Equalizer().frame(width: 16, height: 13)
                 }
             }
-            .padding(.trailing, 12)
-            .frame(maxWidth: .infinity)
+            .padding(.trailing, 7)
+            .frame(width: state.rightEar)
+            Spacer(minLength: 0)
         }
         .frame(height: state.notchHeight)
         .contentShape(Rectangle())
@@ -190,15 +193,19 @@ struct CompactView: View {
 
 struct QuotaBadge: View {
     let quota: Quota?
-    let short: String
+    let short: String?
 
     var body: some View {
-        HStack(spacing: 5) {
-            Text(short)
-                .font(.system(size: 10, weight: .medium))
-                .lineLimit(1)
-                .fixedSize()
-                .foregroundStyle(Palette.secondary)
+        HStack(spacing: 3) {
+            if let short {
+                // Raccourci s'il manque de place (« Fable ») ; le pourcentage et le rond restent entiers.
+                Text(short)
+                    .font(.system(size: 10, weight: .medium))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .layoutPriority(-1)
+                    .foregroundStyle(Palette.secondary)
+            }
             if let q = quota {
                 Text(Format.pourcent(q.percent))
                     .font(.system(size: 12, weight: .semibold, design: .rounded))

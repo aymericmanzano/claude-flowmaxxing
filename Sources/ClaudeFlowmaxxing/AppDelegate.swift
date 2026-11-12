@@ -34,6 +34,13 @@ final class AppState: ObservableObject {
         }
     }
     @Published var notchWidth: CGFloat = 180
+    /// Encoche fermée : tout s'affiche à droite de l'encoche physique, pour ne jamais
+    /// recouvrir les menus de l'app au premier plan, à gauche. `shapeOffset` décale le centre
+    /// de la forme par rapport à l'encoche ; `contentShift` compense la position de la fenêtre.
+    @Published var rightEar: CGFloat = 0
+    @Published var leftEar: CGFloat = 0
+    @Published var shapeOffset: CGFloat = 0
+    @Published var contentShift: CGFloat = 0
     @Published var notchHeight: CGFloat = 32
 
     init() { notchSlot = UserDefaults.standard.integer(forKey: "quotaEncoche") }
@@ -224,13 +231,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         claude.visible && spotify.isPlaying ? 118 : 90
     }
 
+    /// Largeur à droite de l'encoche quand elle est fermée.
+    private var rightEarWidth: CGFloat {
+        claude.visible ? 82 : 44
+    }
+
+    /// Oreilles symétriques et étroites : assez pour le personnage et la pochette à gauche,
+    /// le pourcentage et le rond à droite, sans recouvrir les menus de l'app au premier plan.
+    private var leftEarWidth: CGFloat { rightEarWidth }
+
+    /// Décalage du centre de la forme par rapport au centre de l'encoche.
+    private func offset(for mode: NotchMode) -> CGFloat {
+        mode == .compact ? (rightEarWidth - leftEarWidth) / 2 : 0
+    }
+
     private func size(for mode: NotchMode) -> CGSize {
         let f = Self.flare
         switch mode {
         case .hidden:
             return CGSize(width: state.notchWidth + 2 * f, height: state.notchHeight)
         case .compact:
-            return CGSize(width: state.notchWidth + 2 * earWidth + 2 * f, height: state.notchHeight)
+            return CGSize(width: state.notchWidth + leftEarWidth + rightEarWidth + 2 * f, height: state.notchHeight)
         case .toast:
             return CGSize(width: max(340, state.notchWidth + 2 * earWidth + 2 * f),
                           height: state.notchHeight + Self.toastHeight)
@@ -251,15 +272,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// la plus grande des deux. Le contenu du panneau a une taille fixe, donc agrandir la
     /// fenêtre ne provoque aucun recalcul visible. La fenêtre épouse la forme : chaque clic
     /// sur l'encoche lui arrive, sans minuteur ni zone transparente.
-    private func placeWindow(_ size: CGSize) {
+    private func frame(for mode: NotchMode) -> NSRect {
+        guard let s = screen else { return .zero }
+        let size = size(for: mode)
+        return NSRect(x: s.frame.midX + offset(for: mode) - size.width / 2,
+                      y: s.frame.maxY - size.height, width: size.width, height: size.height)
+    }
+
+    private func placeWindow(_ frame: NSRect) {
         guard let s = screen else { return }
-        let origin = CGPoint(x: s.frame.midX - size.width / 2, y: s.frame.maxY - size.height)
-        let frame = NSRect(origin: origin, size: size)
         guard panel.frame != frame else { return }
         // Redimensionner puis recalculer la vue dans la même image, sans animation implicite :
         // sinon SwiftUI dessine une image avec l'ancienne mise en page et l'encoche saute.
         CATransaction.begin()
         CATransaction.setDisableActions(true)
+        state.contentShift = s.frame.midX - frame.midX
         panel.setFrame(frame, display: false)
         panel.contentView?.needsLayout = true
         panel.contentView?.layoutSubtreeIfNeeded()
@@ -272,16 +299,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func update(force: Bool = false) {
         let mode = currentMode()
         let target = size(for: mode)
-        if !force && mode == state.mode && target == state.shapeSize { return }
+        let targetFrame = frame(for: mode)
+        let ear = rightEarWidth
+        if !force && mode == state.mode && target == state.shapeSize && ear == state.rightEar { return }
         generation += 1
         let gen = generation
 
         if mode != .hidden && !panel.isVisible {
             // Part de la taille de l'encoche pour que l'ouverture s'anime depuis elle.
             state.shapeSize = size(for: .hidden)
+            state.shapeOffset = 0
         }
-        let current = panel.isVisible ? panel.frame.size : state.shapeSize
-        placeWindow(CGSize(width: max(current.width, target.width), height: max(current.height, target.height)))
+        let current = panel.isVisible ? panel.frame : frame(for: .hidden)
+        placeWindow(current.union(targetFrame))
         if mode != .hidden && !panel.isVisible { panel.orderFrontRegardless() }
         panel.ignoresMouseEvents = (mode == .hidden)
 
@@ -292,6 +322,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         withAnimation(anim) {
             state.mode = mode
             state.shapeSize = target
+            state.shapeOffset = offset(for: mode)
+            state.rightEar = ear
+            state.leftEar = leftEarWidth
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
@@ -299,7 +332,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if mode == .hidden {
                 self.panel.orderOut(nil)
             } else {
-                self.placeWindow(target)
+                self.placeWindow(targetFrame)
             }
         }
     }
