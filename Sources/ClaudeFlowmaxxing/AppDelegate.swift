@@ -24,7 +24,8 @@ final class AppState: ObservableObject {
     /// Ouvre la session dans l'app Claude ; sans identifiant (session du terminal), ouvre le panneau.
     func openToastSession() {
         if let id = toastSession,
-           let url = URL(string: "claude://code/continue?session=\(id)") {
+           let safe = id.addingPercentEncoding(withAllowedCharacters: .alphanumerics.union(CharacterSet(charactersIn: "_-"))),
+           let url = URL(string: "claude://code/continue?session=\(safe)") {
             NSWorkspace.shared.open(url)
             toast = nil
         } else {

@@ -107,8 +107,7 @@ final class UsageService: ObservableObject {
                 if err != nil {
                     self.finish(error: L.s("err.offline"))
                 } else if code == 401 || code == 403 {
-                    let body = data.flatMap { String(data: $0, encoding: .utf8) }?.prefix(300) ?? ""
-                    Log.write("quotas HTTP \(code) : \(body)")
+                    Log.write("quotas HTTP \(code)")
                     self.finish(error: L.s("err.denied"))
                 } else if code == 429 {
                     let wait = (resp as? HTTPURLResponse)?.value(forHTTPHeaderField: "retry-after").flatMap(Double.init).map { max($0, 60) } ?? 60

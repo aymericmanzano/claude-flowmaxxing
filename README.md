@@ -55,7 +55,7 @@ Everything runs locally. The app talks to two Anthropic endpoints and to nothing
 
 Claude Code keeps its OAuth credentials in the login keychain under `Claude Code-credentials`. When the access token has expired, Claude Flowmaxxing refreshes it with the stored refresh token and writes the new credentials back to the same keychain item, the same way Claude Code does. Without this, the usage limits stop updating whenever no terminal session has refreshed the token recently.
 
-The token never leaves your Mac except in requests to Anthropic, and it is never written to disk or to the log. The app makes at most one refresh attempt every 5 minutes. If you prefer to avoid this, do not run the app: there is no read-only mode yet.
+The token never leaves your Mac except in requests to Anthropic, and it is never written to disk or to the log. One limitation: the credentials are large, and above about 3.5 KB the macOS `security` tool only accepts them as a command-line argument, as Claude Code does itself. During that write, which lasts a fraction of a second, they can be seen in the process list by other accounts on the same Mac. On a single-user Mac this is not a concern. The app makes at most one refresh attempt every 5 minutes. If you prefer to avoid this, do not run the app: there is no read-only mode yet.
 
 ### About the cost
 
