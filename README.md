@@ -1,5 +1,7 @@
 # Claude Flowmaxxing
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A small native macOS app that lives in your MacBook's notch and keeps you in the flow while you run Claude Code sessions with music on.
 
 - A pixel Claude appears in the notch as soon as a Claude Code session is open, and walks while a reply is being generated. When no session is open, the notch closes back to its normal size.
@@ -65,6 +67,10 @@ The app writes a short diagnostic log to `~/Library/Logs/ClaudeFlowmaxxing.log`,
 ## Disclaimer
 
 Claude Flowmaxxing is a personal side project. It is not affiliated with, endorsed by or supported by Anthropic. Claude is a trademark of Anthropic. The usage endpoint used here is undocumented and may change without notice.
+
+## Credits
+
+Made by [Aymeric Manzano](https://www.aymericmanzano.fr/).
 
 ## License
 
