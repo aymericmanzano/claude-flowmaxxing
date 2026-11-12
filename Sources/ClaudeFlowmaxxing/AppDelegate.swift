@@ -156,7 +156,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if args.contains("--essai-trousseau") { DispatchQueue.global().async { TokenStore.selfTest() } }
         if args.contains("--reecrire-identique") { DispatchQueue.global().async { TokenStore.identityTest() } }
         if args.contains("--essai-fin") {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self.showToast("Refactor du parseur") }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self.showToast("Refactor auth flow") }
         }
         if args.contains("--ouvert") || args.contains("--musique") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {

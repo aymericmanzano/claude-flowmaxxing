@@ -43,6 +43,12 @@ final class MusicService: ObservableObject {
     private var timer: Timer?
 
     init() {
+        if Demo.on {
+            running = true; isPlaying = true; appName = "Spotify"
+            title = "Late Night Commit"; artist = "The Refactors"
+            position = 74; duration = 212; artwork = Demo.artwork()
+            return
+        }
         poll()
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             self?.poll()
@@ -54,6 +60,7 @@ final class MusicService: ObservableObject {
     }
 
     func poll() {
+        if Demo.on { return }
         let open = Self.players.filter(isOpen)
         guard !open.isEmpty else {
             if running { reset() }

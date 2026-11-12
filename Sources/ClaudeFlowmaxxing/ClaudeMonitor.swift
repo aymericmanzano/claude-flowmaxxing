@@ -27,6 +27,10 @@ final class ClaudeMonitor: ObservableObject {
     private var timer: Timer?
 
     init() {
+        if Demo.on {
+            visible = true; generating = true; openCount = 3; busyNames = ["Refactor auth flow"]
+            return
+        }
         tick()
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             self?.tick()

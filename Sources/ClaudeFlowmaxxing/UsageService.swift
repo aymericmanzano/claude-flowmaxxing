@@ -29,6 +29,15 @@ final class UsageService: ObservableObject {
     private var inFlight = false
 
     init() {
+        if Demo.on {
+            let now = Date()
+            fiveHour = Quota(id: "five_hour", label: "5 heures", percent: 42, resetsAt: now.addingTimeInterval(2 * 3600 + 13 * 60))
+            sevenDay = Quota(id: "seven_day", label: "7 jours", percent: 61, resetsAt: now.addingTimeInterval(3 * 86400 + 5 * 3600))
+            others = [Quota(id: "scoped-0", label: "Fable", percent: 18, resetsAt: now.addingTimeInterval(3 * 86400 + 5 * 3600))]
+            credits = Credits(used: 12.40, limit: 50, percent: 24.8, symbole: "$")
+            updated = now
+            return
+        }
         refresh()
         timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             self?.refresh()
@@ -62,6 +71,7 @@ final class UsageService: ObservableObject {
     private var retryAfter: Date?
 
     func refresh() {
+        if Demo.on { return }
         guard !inFlight, !Self.testMode else { return }
         if let r = retryAfter, r > Date() { return }
         inFlight = true

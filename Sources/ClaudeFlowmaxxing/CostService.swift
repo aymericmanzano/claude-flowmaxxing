@@ -22,6 +22,10 @@ final class CostService: ObservableObject {
     private var timer: Timer?
 
     init() {
+        if Demo.on {
+            today = 23.80; projection = 41.10; week = 186.20; topModel = "Opus 5.5"; topShare = 72; ready = true
+            return
+        }
         refresh()
         timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
             self?.refresh()
@@ -29,6 +33,7 @@ final class CostService: ObservableObject {
     }
 
     func refresh() {
+        if Demo.on { return }
         queue.async { [weak self] in self?.scan() }
     }
 

@@ -4,6 +4,14 @@
 
 A small native macOS app that lives in your MacBook's notch and keeps you in the flow while you run Claude Code sessions with music on.
 
+<p align="center"><img src="docs/claude.png" width="580" alt="Claude page: 5-hour, 7-day and Fable limits, today's cost, credits and top model"></p>
+
+| Closed notch | Session finished | Music page |
+|---|---|---|
+| <img src="docs/compact.png" width="260" alt="Closed notch with the pixel Claude, album art and the 5-hour ring"> | <img src="docs/toast.png" width="260" alt="Banner saying a session has finished"> | <img src="docs/musique.png" width="260" alt="Music page with artwork, progress and controls"> |
+
+Screenshots use the built-in demo mode (`--demo`), with fictional data.
+
 - A pixel Claude appears in the notch as soon as a Claude Code session is open, and walks while a reply is being generated. When no session is open, the notch closes back to its normal size.
 - The right side of the notch shows your 5-hour usage as a ring. Click it to switch to the 7-day or the per-model weekly limit.
 - When a session finishes, a banner slides out of the notch for 6 seconds. Click it to jump straight to that session in the Claude desktop app.
@@ -63,6 +71,7 @@ The app writes a short diagnostic log to `~/Library/Logs/ClaudeFlowmaxxing.log`,
 | `--musique` | Opens the panel on the music page |
 | `--essai-fin` | Shows the "finished" banner at launch |
 | `--essai-trousseau` | Tests a keychain write on a scratch item, then deletes it |
+| `--demo` | Shows fictional sessions, limits, cost and music, for screenshots; reads no real data |
 
 ## Disclaimer
 
