@@ -135,6 +135,7 @@ enum L {
         "board.left": ["en": "left", "fr": "restants", "es": "restante", "de": "übrig"],
         "board.ahead": ["en": "%@ pts ahead", "fr": "%@ pts d'avance", "es": "%@ pts de ventaja", "de": "%@ Pkt. voraus"],
         "board.behind": ["en": "%@ pts behind", "fr": "%@ pts de retard", "es": "%@ pts de retraso", "de": "%@ Pkt. zurück"],
+        "board.resetAt": ["en": "resets %@ at %@", "fr": "remise à zéro %@ à %@", "es": "se reinicia el %@ a las %@", "de": "Reset %@ um %@"],
         "board.budget": ["en": "budget %@ a day", "fr": "budget %@ par jour", "es": "presupuesto %@ al día", "de": "Budget %@ pro Tag"],
         "board.now": ["en": "now", "fr": "maintenant", "es": "ahora", "de": "jetzt"],
         "board.locked": ["en": "Locked", "fr": "Bloqué", "es": "Bloqueado", "de": "Gesperrt"],

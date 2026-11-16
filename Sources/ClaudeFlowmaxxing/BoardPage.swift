@@ -18,7 +18,8 @@ struct BoardPage: View {
                 ChartCard(kind: .five, title: L.s("board.5h"), forecast: five,
                           subtitle: five.map { L.s("quota.reset", Format.dureeAvant($0.end)) })
                 ChartCard(kind: .seven, title: L.s("board.week"), forecast: week,
-                          subtitle: week.map { L.s("board.budget", Format.pourcent1($0.perDay)) })
+                          subtitle: week.map { L.s("board.resetAt", Format.jourCourt($0.end), Format.heure($0.end)) },
+                          detail: week.map { L.s("board.budget", Format.pourcent1($0.perDay)) })
             }
             .frame(height: 212)
             HStack(spacing: 10) {
@@ -95,6 +96,8 @@ struct ChartCard: View {
     let title: String
     let forecast: Forecast?
     let subtitle: String?
+    /// Information secondaire à droite du pourcentage (budget par jour de la semaine).
+    var detail: String? = nil
     @State private var hover: (date: Date, used: Double, projected: Bool)?
 
     var body: some View {
@@ -109,6 +112,11 @@ struct ChartCard: View {
                     .font(.system(size: 26, weight: .bold, design: .rounded)).monospacedDigit()
                     .foregroundStyle(.white)
                 Text(L.s("board.left")).font(.system(size: 12)).foregroundStyle(Palette.secondary)
+                if let detail {
+                    Spacer(minLength: 6)
+                    Text(detail).font(.system(size: 11.5)).foregroundStyle(Palette.secondary)
+                        .lineLimit(1).minimumScaleFactor(0.8)
+                }
             }
             Text(hoverText ?? subtitle ?? " ")
                 .font(.system(size: 11.5, weight: hover == nil ? .regular : .semibold))
