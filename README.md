@@ -4,7 +4,11 @@
 
 A small native macOS app that lives in your MacBook's notch and keeps you in the flow while you run Claude Code sessions with music on.
 
-<p align="center"><img src="docs/claude.png" width="580" alt="Claude page: 5-hour, 7-day and Fable limits, today's cost, credits and top model"></p>
+<p align="center"><img src="docs/claude.png" width="580" alt="Claude page: 5-hour, 7-day and Fable limits, today's cost, credits, top model and the red line warning that the week runs out before the reset"></p>
+
+| Board page | Settings |
+|---|---|
+| <img src="docs/board.png" width="400" alt="Board page: 5-hour and weekly charts with an even pace and a projection, and what used the week"> | <img src="docs/settings.png" width="400" alt="Settings: notifications, projection basis, launch at login, credit and version"> |
 
 | Closed notch | Session finished | Music page |
 |---|---|---|
