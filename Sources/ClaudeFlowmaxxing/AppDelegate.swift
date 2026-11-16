@@ -2,6 +2,7 @@ import QuartzCore
 import AppKit
 import Combine
 import SwiftUI
+import ServiceManagement
 
 enum NotchMode: Equatable { case hidden, compact, toast, expanded }
 
@@ -11,6 +12,17 @@ final class AppState: ObservableObject {
     @Published var shapeSize: CGSize = .zero
     @Published var expanded = false
     @Published var page = 0
+    /// Réglages ouverts par la roue crantée (à la place des pages).
+    @Published var settings = false
+    static let claudePage = 0, boardPage = 1, musicPage = 2, pageCount = 3
+    /// La ligne d'alerte de la page Claude est affichée (semaine qui finit avant le renouvellement).
+    @Published var weekAlert = false
+    var expandedHeight: CGFloat {
+        if settings { return AppDelegate.settingsHeight }
+        if page == AppState.boardPage { return AppDelegate.tallHeight }
+        if page == AppState.claudePage && weekAlert { return AppDelegate.expandedSize.height + 40 }
+        return AppDelegate.expandedSize.height
+    }
     /// Décalage en cours pendant un balayage à deux doigts.
     @Published var pageDrag: CGFloat = 0
     /// Quota affiché dans l'encoche : 0 = 5 heures, 1 = 7 jours, 2 = quota du modèle (Fable).
@@ -53,7 +65,8 @@ final class AppState: ObservableObject {
     }
 
     func openMusic() {
-        page = 1
+        settings = false
+        page = AppState.musicPage
         expanded = true
     }
 }
@@ -85,9 +98,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     static let flare: CGFloat = 6      // évasement en haut des bords
     static let expandedSize = CGSize(width: 580, height: 268)
+    /// Onglet Tableau et réglages : panneau plus haut, pour des courbes et des textes lisibles.
+    static let tallHeight: CGFloat = 450
+    static let settingsHeight: CGFloat = 340
     static let toastHeight: CGFloat = 34
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        registerLoginItemOnce()
         panel = NotchPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel],
                            backing: .buffered, defer: false)
         panel.isOpaque = false
@@ -104,8 +121,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel.contentView = host
 
         measureNotch()
+        Settings.register()
+
+        // Les chiffres de la semaine partent du début de la fenêtre de quota.
+        usage.$sevenDay
+            .map { $0?.resetsAt.map { $0.addingTimeInterval(-7 * 86400) } }
+            .removeDuplicates { a, b in abs((a?.timeIntervalSince1970 ?? 0) - (b?.timeIntervalSince1970 ?? 0)) < 600 }
+            .receive(on: RunLoop.main)
+            .sink { [weak self] start in if let start { self?.cost.windowStart = start } }
+            .store(in: &bag)
 
         Publishers.CombineLatest4(claude.$visible, music.$isPlaying, state.$expanded, claude.$generating)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in DispatchQueue.main.async { self?.update() } }
+            .store(in: &bag)
+
+        // Le panneau change de hauteur avec l'onglet (Tableau et réglages plus hauts).
+        state.$page.combineLatest(state.$settings, state.$weekAlert)
+            .removeDuplicates { $0 == $1 }
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in DispatchQueue.main.async { self?.update() } }
             .store(in: &bag)
@@ -123,12 +156,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         state.$expanded
             .removeDuplicates()
             .sink { [weak self] open in
-                guard let self, open else { return }
+                guard let self else { return }
+                if !open { self.state.settings = false; return }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     self.usage.refreshIfStale()
                     self.cost.refresh()
                 }
-                self.state.page = (!self.claude.visible && self.music.running) ? 1 : self.state.page
+                self.state.page = (!self.claude.visible && self.music.running) ? AppState.musicPage : self.state.page
             }
             .store(in: &bag)
 
@@ -159,9 +193,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if args.contains("--essai-fin") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self.showToast("Refactor auth flow") }
         }
-        if args.contains("--ouvert") || args.contains("--musique") {
+        if args.contains("--essai-alerte") { Alerts.test() }
+        if args.contains("--ouvert") || args.contains("--musique") || args.contains("--tableau") || args.contains("--reglages") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                self.state.page = args.contains("--musique") ? 1 : 0
+                self.state.page = args.contains("--musique") ? AppState.musicPage
+                    : (args.contains("--tableau") ? AppState.boardPage : AppState.claudePage)
+                self.state.settings = args.contains("--reglages")
                 self.state.expanded = true
             }
         }
@@ -184,7 +221,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             var drag = state.pageDrag + dx
             // Résistance au bord : pas de page avant la première ni après la dernière.
-            if (state.page == 0 && drag > 0) || (state.page == 1 && drag < 0) { drag = state.pageDrag + dx * 0.25 }
+            if (state.page == 0 && drag > 0) || (state.page == AppState.pageCount - 1 && drag < 0) { drag = state.pageDrag + dx * 0.25 }
             state.pageDrag = max(-300, min(300, drag))
             return true
         case .ended, .cancelled:
@@ -192,8 +229,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             swipeActive = false
             let threshold: CGFloat = 70
             withAnimation(.spring(duration: 0.4, bounce: 0.15)) {
-                if state.pageDrag < -threshold { state.page = 1 }
-                else if state.pageDrag > threshold { state.page = 0 }
+                if state.pageDrag < -threshold { state.page = min(AppState.pageCount - 1, state.page + 1) }
+                else if state.pageDrag > threshold { state.page = max(0, state.page - 1) }
                 state.pageDrag = 0
             }
             return true
@@ -258,7 +295,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                           height: state.notchHeight + Self.toastHeight)
         case .expanded:
             return CGSize(width: max(Self.expandedSize.width, state.notchWidth + 2 * earWidth + 2 * f),
-                          height: Self.expandedSize.height)
+                          height: state.expandedHeight)
         }
     }
 
@@ -293,6 +330,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel.contentView?.layoutSubtreeIfNeeded()
         panel.displayIfNeeded()
         CATransaction.commit()
+    }
+
+    /// Ouverture au démarrage du Mac : inscrite une seule fois, au premier lancement depuis
+    /// /Applications. Si l'utilisateur la retire ensuite (Réglages Système, Général, Ouverture),
+    /// l'app ne la remet pas.
+    private func registerLoginItemOnce() {
+        let key = "ouvertureAuDemarrageInscrite"
+        guard !Demo.on, !UserDefaults.standard.bool(forKey: key),
+              Bundle.main.bundlePath.hasPrefix("/Applications/") else { return }
+        do {
+            try SMAppService.mainApp.register()
+            UserDefaults.standard.set(true, forKey: key)
+            Log.write("ouverture au démarrage : inscrite")
+        } catch {
+            Log.write("ouverture au démarrage : échec (\(error.localizedDescription))")
+        }
     }
 
     private var generation = 0

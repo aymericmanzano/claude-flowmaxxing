@@ -16,7 +16,10 @@ Screenshots use the built-in demo mode (`--demo`), with fictional data.
 - The right side of the notch shows your 5-hour usage as a ring. Click it to switch to the 7-day or the per-model weekly limit.
 - When a session finishes, a banner slides out of the notch for 6 seconds. Click it to jump straight to that session in the Claude desktop app.
 - Click the notch to open the panel: 5-hour, 7-day and per-model limits with their reset times, extra usage credits, today's estimated cost, and your most used model over 7 days.
-- A second page controls your music: artwork, track, progress, play/pause, previous and next, for Spotify, Apple Music and VLC (title only for VLC). With any other player, such as Deezer, Tidal or a browser tab, the buttons send the keyboard media keys. Swipe with two fingers to move between pages.
+- A Board page charts the 5-hour and 7-day windows: the real curve, an even pace to compare against, and a projection that shows when the week would run out at your current rate, with a daily budget to last until the reset. Hover a chart to read any point. Below, what used your week: tokens, calls, estimated cost, top model and the folders that consumed the most.
+- When the projection says the week runs out before the reset, a red line on the Claude page tells you when, and the budget per day to hold.
+- The gear opens the settings: macOS notifications when 50, 25 and 10% of the week is left, when the projection runs out before the reset, and when the 5-hour window passes 90%; the projection basis (whole week or last 24 hours); launch at login; credit and version.
+- A third page controls your music: artwork, track, progress, play/pause, previous and next, for Spotify, Apple Music and VLC (title only for VLC). With any other player, such as Deezer, Tidal or a browser tab, the buttons send the keyboard media keys. Swipe with two fingers to move between pages.
 
 The interface follows your system language: English, French, Spanish or German, with English as the fallback.
 
@@ -37,6 +40,8 @@ cd claude-flowmaxxing
 
 `build.sh` compiles a release build with Swift Package Manager, assembles `build/ClaudeFlowmaxxing.app`, signs it ad hoc and creates `build/ClaudeFlowmaxxing.dmg`. Open the DMG and drag the app to Applications.
 
+When launched from Applications for the first time, the app adds itself to your login items so it starts with your Mac. You can remove it in System Settings, General, Login Items; it will not add itself back.
+
 The app has no Apple Developer ID signature. On first launch, right-click the app and choose Open, then confirm. macOS asks once per music app for permission to control it.
 
 ## How it works
@@ -48,6 +53,8 @@ Everything runs locally. The app talks to two Anthropic endpoints and to nothing
 | Open and busy sessions | `~/.claude/sessions/<pid>.json`, written by Claude Code for each session, checked every second |
 | Jump to a finished session | `claude://code/continue?session=<id>` deep link, handled by the Claude desktop app |
 | Usage limits and credits | `GET https://api.anthropic.com/api/oauth/usage`, every 60 seconds, with the OAuth token Claude Code stores in the login keychain |
+| Usage history for the charts | Each change in the limits is saved to `~/Library/Application Support/ClaudeFlowmaxxing/historique.json`, 8 days at most; before the first saved value, the curve is shaped from local cost |
+| Notifications | macOS notification center, or an AppleScript notification when macOS refuses it for an ad hoc signed app |
 | Estimated cost | Local parsing of the transcripts in `~/.claude/projects`, priced at public API rates |
 | Music | AppleScript for Spotify, Apple Music and VLC, only when the app is already running; keyboard media keys for other players, which needs the Accessibility permission |
 
@@ -69,6 +76,9 @@ The app writes a short diagnostic log to `~/Library/Logs/ClaudeFlowmaxxing.log`,
 |---|---|
 | `--ouvert` | Opens the panel at launch |
 | `--musique` | Opens the panel on the music page |
+| `--tableau` | Opens the panel on the Board page |
+| `--reglages` | Opens the panel on the settings |
+| `--essai-alerte` | Sends a test notification |
 | `--essai-fin` | Shows the "finished" banner at launch |
 | `--essai-trousseau` | Tests a keychain write on a scratch item, then deletes it |
 | `--demo` | Shows fictional sessions, limits, cost and music, for screenshots; reads no real data |

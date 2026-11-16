@@ -54,6 +54,48 @@ enum Format {
         return L.s("dur.m", mins)
     }
 
+    /// Une décimale : « 13,6% » en français, « 13.6% » en anglais.
+    static func pourcent1(_ v: Double) -> String {
+        let f = NumberFormatter()
+        f.locale = Locale(identifier: L.lang)
+        f.maximumFractionDigits = 1
+        f.minimumFractionDigits = 0
+        return (f.string(from: NSNumber(value: v)) ?? String(format: "%.1f", v)) + "%"
+    }
+
+    private static func dateFormat(_ template: String) -> DateFormatter {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: L.lang)
+        f.setLocalizedDateFormatFromTemplate(template)
+        return f
+    }
+
+    /// « samedi », « Saturday »
+    static func jour(_ d: Date) -> String { dateFormat("EEEE").string(from: d) }
+    /// « sam. 21 », « Sat 21 »
+    static func jourCourt(_ d: Date) -> String { dateFormat("EEEd").string(from: d) }
+
+    /// « 4h34 », « 17h » en français ; l'heure locale ailleurs (« 4:34 AM »).
+    static func heure(_ d: Date) -> String {
+        if L.isFrench {
+            let c = Calendar.current.dateComponents([.hour, .minute], from: d)
+            let m = c.minute ?? 0
+            return "\(c.hour ?? 0)h" + (m == 0 ? "" : String(format: "%02d", m))
+        }
+        return dateFormat("jmm").string(from: d)
+    }
+
+    /// « 1,08 Md », « 612 M », « 4 318 » ; « 1.08B » en anglais.
+    static func grandNombre(_ v: Double) -> String {
+        let f = NumberFormatter()
+        f.locale = Locale(identifier: L.isFrench ? "fr_FR" : L.lang)
+        f.numberStyle = .decimal
+        f.maximumFractionDigits = v >= 1e9 ? 2 : 0
+        if v >= 1e9 { return (f.string(from: NSNumber(value: v / 1e9)) ?? "") + L.s("num.billion") }
+        if v >= 1e6 { return (f.string(from: NSNumber(value: v / 1e6)) ?? "") + L.s("num.million") }
+        return f.string(from: NSNumber(value: v)) ?? "\(Int(v))"
+    }
+
     static func minutesSecondes(_ secondes: Double) -> String {
         let s = max(0, Int(secondes))
         return String(format: "%d:%02d", s / 60, s % 60)

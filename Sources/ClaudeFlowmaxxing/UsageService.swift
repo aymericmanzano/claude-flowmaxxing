@@ -24,6 +24,8 @@ final class UsageService: ObservableObject {
     @Published private(set) var credits: Credits?
     @Published private(set) var error: String?
     @Published private(set) var updated: Date?
+    /// Relevés successifs des quotas, pour les courbes de l'onglet Tableau.
+    @Published private(set) var samples: [UsageSample] = UsageHistory.load()
 
     private var timer: Timer?
     private var inFlight = false
@@ -180,6 +182,9 @@ final class UsageService: ObservableObject {
             self.credits = cr
             self.error = nil
             self.updated = Date()
+            self.samples = UsageHistory.append(UsageSample(t: Date(), five: five?.percent, seven: seven?.percent),
+                                               to: self.samples)
+            Alerts.check(five: five, seven: seven, samples: self.samples)
         }
     }
 

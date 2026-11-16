@@ -18,28 +18,58 @@ struct ExpandedView: View {
         .padding(.bottom, 10)
     }
 
-    /// Les deux pages côte à côte : la bande glisse d'une page à l'autre et suit les doigts
-    /// pendant un balayage à deux doigts.
-    private var pages: some View {
+    /// Les trois pages côte à côte : la bande glisse d'une page à l'autre et suit les doigts
+    /// pendant un balayage à deux doigts. La roue crantée remplace la bande par les réglages.
+    /// Hauteur de la page affichée : celle du panneau, moins l'en-tête, les points et les marges.
+    private var pageHeight: CGFloat { max(0, state.expandedHeight - state.notchHeight - 36) }
+
+    @ViewBuilder private var pages: some View {
         let w = AppDelegate.expandedSize.width - 2 * AppDelegate.flare - 32
-        let gap: CGFloat = 32
-        let base = state.page == 0 ? (w + gap) / 2 : -(w + gap) / 2
-        return HStack(alignment: .top, spacing: gap) {
-            ClaudePage(state: state, claude: claude, usage: usage, cost: cost)
+        if state.settings {
+            SettingsPage()
                 .frame(width: w, alignment: .top)
-            MusicPage(music: music)
-                .frame(width: w, alignment: .top)
+        } else {
+            let gap: CGFloat = 32
+            let base = CGFloat(1 - state.page) * (w + gap)
+            HStack(alignment: .top, spacing: gap) {
+                ClaudePage(state: state, claude: claude, usage: usage, cost: cost)
+                    .frame(width: w, alignment: .top)
+                BoardPage(usage: usage, cost: cost)
+                    .frame(width: w, alignment: .top)
+                MusicPage(music: music)
+                    .frame(width: w, alignment: .top)
+            }
+            .offset(x: base + state.pageDrag)
+            .frame(width: w, height: pageHeight, alignment: .top)
+            .clipped()
         }
-        .offset(x: base + state.pageDrag)
-        .frame(width: w, alignment: .center)
-        .clipped()
     }
 
     private var header: some View {
         HStack(spacing: 14) {
-            tab("Claude", 0)
-            tab(L.s("tab.music"), 1)
+            if state.settings {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) { state.settings = false }
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "chevron.left").font(.system(size: 11, weight: .semibold))
+                        Text(L.s("help.settings")).font(.system(size: 13, weight: .semibold))
+                    }
+                    .foregroundStyle(.white)
+                }
+            } else {
+                tab("Claude", AppState.claudePage)
+                tab(L.s("tab.board"), AppState.boardPage)
+                tab(L.s("tab.music"), AppState.musicPage)
+            }
             Spacer(minLength: state.notchWidth)
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { state.settings.toggle() }
+            } label: {
+                Image(systemName: "gearshape")
+                    .foregroundStyle(state.settings ? Color.white : Palette.secondary)
+            }
+            .help(L.s("help.settings"))
             Button {
                 usage.refresh()
                 cost.refresh()
@@ -71,13 +101,14 @@ struct ExpandedView: View {
 
     private var dots: some View {
         HStack(spacing: 6) {
-            ForEach(0..<2, id: \.self) { i in
+            ForEach(0..<AppState.pageCount, id: \.self) { i in
                 Circle()
                     .fill(state.page == i ? Color.white : Color.white.opacity(0.3))
                     .frame(width: 6, height: 6)
                     .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { state.page = i } }
             }
         }
+        .opacity(state.settings ? 0 : 1)
     }
 }
 
@@ -112,6 +143,7 @@ struct ClaudePage: View {
                      value: cost.topModel ?? "…",
                      subtitle: cost.topModel == nil ? L.s("model.none") : L.s("model.share", Format.pourcent(cost.topShare)))
             }
+            WeekAlertLine(state: state, usage: usage, cost: cost)
             Group {
                 if let e = usage.error {
                     Text(e).foregroundStyle(Color(red: 0.96, green: 0.65, blue: 0.14))

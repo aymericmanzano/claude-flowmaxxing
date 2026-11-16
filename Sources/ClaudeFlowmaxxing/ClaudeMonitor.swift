@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 
 /// Détecte les sessions Claude Code ouvertes et celles qui génèrent une réponse.
 /// Source : ~/.claude/sessions/<pid>.json, que Claude Code tient à jour pour chaque session
@@ -65,7 +66,11 @@ final class ClaudeMonitor: ObservableObject {
             busy.sort()
             self.lastStatus = statuses
             self.primed = true
-            let vis = open > 0
+            // L'app de bureau ouverte suffit : au démarrage du Mac, aucune session n'existe
+            // encore, mais les quotas doivent déjà s'afficher.
+            let desktopOpen = !NSRunningApplication
+                .runningApplications(withBundleIdentifier: "com.anthropic.claudefordesktop").isEmpty
+            let vis = open > 0 || desktopOpen
             let gen = !busy.isEmpty
             DispatchQueue.main.async {
                 if self.visible != vis { self.visible = vis }

@@ -101,7 +101,8 @@ struct RootView: View {
             .overlay(alignment: .top) {
                 ExpandedView(state: state, claude: claude, usage: usage, cost: cost, music: music)
                     .frame(width: AppDelegate.expandedSize.width - 2 * AppDelegate.flare,
-                           height: AppDelegate.expandedSize.height, alignment: .top)
+                           height: max(AppDelegate.expandedSize.height, open ? state.shapeSize.height : 0), alignment: .top)
+                    .clipped()
                     .opacity(open ? 1 : 0)
                     .blur(radius: open ? 0 : 10)
                     .scaleEffect(open ? 1 : 0.9, anchor: .top)
