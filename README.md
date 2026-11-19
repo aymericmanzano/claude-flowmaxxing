@@ -34,7 +34,11 @@ The interface follows your system language: English, French, Spanish or German, 
 - Claude Code, signed in with a Claude subscription (the usage limits come from your account)
 - Spotify, Apple Music or VLC, optional
 
-## Build and install
+## Install
+
+Download `ClaudeFlowmaxxing.dmg` from the [latest release](https://github.com/aymericmanzano/claude-flowmaxxing/releases/latest), open it and drag the app to Applications.
+
+## Build from source
 
 ```bash
 git clone https://github.com/aymericmanzano/claude-flowmaxxing.git
@@ -46,7 +50,9 @@ cd claude-flowmaxxing
 
 When launched from Applications for the first time, the app adds itself to your login items so it starts with your Mac. You can remove it in System Settings, General, Login Items; it will not add itself back.
 
-The app has no Apple Developer ID signature. On first launch, right-click the app and choose Open, then confirm. macOS asks once per music app for permission to control it.
+The app has no Apple Developer ID signature, so macOS blocks the first launch. On macOS 15 Sequoia or later, open the app once, then go to System Settings, Privacy & Security, and click Open Anyway next to the Claude Flowmaxxing message. On macOS 14 Sonoma, right-click the app, choose Open, then confirm. macOS asks once per music app for permission to control it.
+
+Each new version is signed again, so macOS may ask once more for access to the Claude Code keychain item after an update.
 
 ## How it works
 
